@@ -1,17 +1,15 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { AppleDevice, Orientation } from './types.ts';
 
 /**
- * iPhones and iPads without a Home button that run iOS 27 / iPadOS 27, as
- * portrait screen size in CSS pixels and device pixel ratio. Launch images are
- * only generated for these; devices with a Home button are left alone.
- *
- * Sizes are the published pixel resolution divided by the scale factor.
+ * Devices that get launch images: all-screen iPhones and iPads supported by
+ * iOS 27 and iPadOS 27. Sizes are portrait CSS pixels (published resolution
+ * divided by scale).
  */
 const devices: AppleDevice[] = [
   { kind: 'iphone', width: 440, height: 956, scale: 3, models: 'iPhone 16 Pro Max, 17 Pro Max, 18 Pro Max' },
@@ -33,7 +31,7 @@ const devices: AppleDevice[] = [
   { kind: 'ipad', width: 744, height: 1133, scale: 2, models: 'iPad mini (6th gen, A17 Pro)' },
 ];
 
-/** Devices that get a launch image. See the comment on the table above. */
+/** Devices that get launch images. */
 export const APPLE_DEVICES: readonly AppleDevice[] = Object.freeze(devices.map((d) => Object.freeze(d)));
 
 /** Finds the device for a screen size, in either orientation. */

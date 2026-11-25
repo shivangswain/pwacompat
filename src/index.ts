@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -206,7 +206,7 @@ async function addTouchIcon({ manifest, manifestHash, opts, store, result }: Con
       href = await renderTouchIcon(source.src, background);
       store.set(key, href);
     } catch (err) {
-      // Not readable (e.g. no CORS): link the original file rather than nothing.
+      // Pixels unreadable (e.g. no CORS): link the source icon as-is.
       warn('could not process icon, linking it unchanged', source.src, err);
       href = source.src;
     }
@@ -259,7 +259,7 @@ async function addSplash(c: Context): Promise<void> {
   const device = findDevice(screen.width, screen.height, devicePixelRatio);
   result.device = device;
   if (!device) {
-    result.skipped['splash'] = 'not a current iPhone or iPad without a Home button';
+    result.skipped['splash'] = 'not a supported device';
     return;
   }
 

@@ -80,7 +80,7 @@ describe('wrapText', () => {
     assert.deepEqual(wrapText('one two three four', 9, measure), ['one two', 'three', 'four']);
   });
 
-  it('ellipsises a word wider than the line instead of overflowing', () => {
+  it('ellipsises a word wider than the line', () => {
     const [line] = wrapText('Supercalifragilistic', 8, measure);
     assert.ok(line && line.length <= 8 && line.endsWith('…'), line);
   });

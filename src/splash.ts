@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -29,8 +29,7 @@ function fit(line: string, maxWidth: number, measure: Measure, ellipsis: boolean
 
 /**
  * Greedy word wrap into at most `maxLines` lines no wider than `maxWidth`.
- * A word wider than a line, or text that needs more lines, is cut with an
- * ellipsis instead of being drawn off-screen.
+ * Overlong words and overflowing text end in an ellipsis.
  */
 export function wrapText(text: string, maxWidth: number, measure: Measure, maxLines = 3): string[] {
   const words = text.trim().split(/\s+/).filter(Boolean);

@@ -28,7 +28,7 @@ describe('findDevice', () => {
     assert.equal(findDevice(414, 896, 2)?.models, 'iPhone 11');
   });
 
-  it('ignores devices with a Home button', () => {
+  it('ignores devices that are not listed', () => {
     assert.equal(findDevice(375, 667, 2), null); // iPhone SE (2nd/3rd gen), 6–8
     assert.equal(findDevice(414, 736, 3), null); // iPhone 6–8 Plus
     assert.equal(findDevice(810, 1080, 2), null); // iPad (7th–9th gen)

@@ -8,7 +8,7 @@ A TypeScript rewrite focused on current Apple platforms. Breaking: older browser
 
 - Rewritten in TypeScript and built with esbuild. Ships a drop-in script (`dist/pwacompat.min.js`), an ES module with types (`dist/pwacompat.mjs`) and a source map.
 - Runs only on iOS, iPadOS (including desktop-mode iPad) and macOS Safari, and does nothing inside an installed web app. Every other browser reads the manifest natively.
-- Launch images are drawn only for the current device, and only for iPhones and iPads without a Home button that run iOS 27 / iPadOS 27. Each image carries an exact `device-width`/`device-height`/`-webkit-device-pixel-ratio`/`orientation` media query. iPhones get portrait only; iPads get both unless the manifest locks one.
+- Launch images are drawn only for the current device, and only for the all-screen iPhones and iPads supported by iOS 27 / iPadOS 27. Each image carries an exact `device-width`/`device-height`/`-webkit-device-pixel-ratio`/`orientation` media query. iPhones get portrait only; iPads get both unless the manifest locks one.
 - Launch images are drawn in idle time on one reused canvas, after web fonts load, and are cached per manifest and device.
 - `apple-touch-icon` is generated only from `maskable` icons by default, because it overrides the icons iOS would otherwise read from the manifest. Set `data-pwacompat-touch-icon="any"` for the v2 behaviour.
 - The Smart App Banner (`apple-itunes-app`) is added only when the manifest sets `prefer_related_applications: true`.

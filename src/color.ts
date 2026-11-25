@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,8 +10,7 @@ export type RGB = readonly [r: number, g: number, b: number];
 
 /** WCAG 2 relative luminance of an sRGB colour (0–255 channels), from 0 (black) to 1 (white). */
 export function relativeLuminance(rgb: RGB): number {
-  // A plain array on purpose: mapping a Uint8ClampedArray would round each
-  // linear value back to 0 or 1 (v2's contrast bug).
+  // Mapped as a plain array: a Uint8ClampedArray would round each value to 0 or 1.
   const [r, g, b] = rgb.map((channel) => {
     const s = channel / 255;
     return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
@@ -34,10 +33,7 @@ export function prefersLightText(background: RGB): boolean {
 
 let colorContext: CanvasRenderingContext2D | null | undefined;
 
-/**
- * Parses any CSS colour the browser understands. Returns `null` for invalid
- * input instead of silently treating it as black.
- */
+/** Parses any CSS colour the browser understands; `null` when invalid. */
 export function parseColor(color: string): RGB | null {
   colorContext ??= createContext(1, 1, true);
   const ctx = colorContext;

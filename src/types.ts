@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -71,7 +71,7 @@ export interface ResolvedOptions {
 /** An Apple platform that can install web apps. */
 export type ApplePlatform = 'iphone' | 'ipad' | 'mac';
 
-/** A current iPhone or iPad without a Home button, in CSS pixels (portrait). */
+/** An iPhone or iPad screen: portrait size in CSS pixels and pixel ratio. */
 export interface AppleDevice {
   readonly kind: 'iphone' | 'ipad';
   readonly width: number;

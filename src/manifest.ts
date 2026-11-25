@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -88,8 +88,7 @@ function normalizeIcon(raw: unknown, base: string): ManifestIcon | null {
 
 /**
  * Extracts a numeric App Store id from a `related_applications` entry: its
- * `id`, or the `/id<digits>` path segment of its `url`. Anything else is
- * rejected, so a crafted value can't add Smart App Banner parameters.
+ * `id`, or the `/id<digits>` path segment of its `url`.
  */
 export function appStoreIdFrom(app: unknown): string | undefined {
   if (typeof app !== 'object' || app === null) {
@@ -115,10 +114,7 @@ export function appStoreIdFrom(app: unknown): string | undefined {
   }
 }
 
-/**
- * Validates and normalises a parsed manifest. Bad or missing members are
- * dropped one by one, so one malformed field never discards the rest.
- */
+/** Validates and normalises a parsed manifest, dropping bad members individually. */
 export function normalizeManifest(raw: unknown, manifestUrl: string): Manifest {
   const m = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
 

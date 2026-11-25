@@ -1,13 +1,10 @@
 /*
  * Copyright 2018 Google Inc. All rights reserved.
- * Modifications copyright 2026 Shivang P Swain: rewritten in TypeScript for v3.
+ * Modifications copyright 2026 Shivang P Swain.
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * `<head>` helpers. Matching is done by comparing attributes in JavaScript,
- * never by building CSS selectors from manifest data.
- */
+/** `<head>` helpers. Elements are matched by attribute values, not by selectors built from manifest data. */
 
 /** Marks elements pwacompat added. */
 export const MARKER = 'data-pwacompat';

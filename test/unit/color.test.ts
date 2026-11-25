@@ -9,8 +9,7 @@ describe('relativeLuminance', () => {
     assert.ok(Math.abs(relativeLuminance([176, 176, 176]) - 0.434) < 0.001);
   });
 
-  it('keeps fractional channel values (v2 clamped them to 0 or 1)', () => {
-    // v2 mapped a Uint8ClampedArray, so #b0b0b0 came out as luminance 0.
+  it('keeps fractional channel values', () => {
     assert.ok(relativeLuminance([176, 176, 176]) > 0.4);
   });
 });

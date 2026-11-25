@@ -15,7 +15,7 @@ describe('largestIconSize', () => {
 });
 
 describe('normalizeManifest', () => {
-  it('survives an icon without sizes (v2 discarded the whole manifest)', () => {
+  it('keeps the manifest when an icon has no sizes', () => {
     const m = normalizeManifest({ theme_color: 'red', icons: [{ src: 'a.png' }] }, BASE);
     assert.equal(m.themeColor, 'red');
     assert.equal(m.icons.length, 1);

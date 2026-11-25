@@ -15,8 +15,8 @@ const APP = {
   ],
 };
 
-// Tags v2 injected "just in case" that Firt and the review flagged. v3 never adds them.
-const LEGACY_META = [
+// Tags iOS reads from the manifest, or that only other browsers use.
+const OMITTED_META = [
   'apple-mobile-web-app-capable',
   'apple-mobile-web-app-title',
   'mobile-web-app-capable',
@@ -40,7 +40,7 @@ for (const build of ['iife', 'esm'] as const) {
       expect(out.tags).toEqual([]);
     });
 
-    test('does nothing inside an installed iOS app (review C1: v2 build ignored navigator.standalone)', async ({ page }) => {
+    test('does nothing inside an installed iOS app', async ({ page }) => {
       const served = await serve(page, { ...DEVICES.iPhone17Pro, standalone: true }, [{ manifest: APP, build }]);
       const out = await open(page, '/index.html', { expectRun: false });
       expect(served.manifestRequests).toEqual([]);
@@ -66,10 +66,10 @@ for (const build of ['iife', 'esm'] as const) {
       expect(byRel(out.tags, 'icon').map((t) => t['sizes'])).toEqual(['512x512', '192x192']);
     });
 
-    test('never adds legacy or "just in case" meta tags (Firt)', async ({ page }) => {
+    test('adds no capable, title or non-Apple meta tags', async ({ page }) => {
       await serve(page, DEVICES.iPhone17Pro, [{ manifest: { ...APP, display: 'minimal-ui' }, build }]);
       const out = await open(page);
-      for (const name of LEGACY_META) {
+      for (const name of OMITTED_META) {
         expect(out.metaNames).not.toContain(name);
       }
     });
@@ -93,11 +93,11 @@ test.describe('launch images', () => {
     expect(byRel(out.tags, 'apple-touch-startup-image').map((t) => t['media']?.endsWith('(orientation: landscape)'))).toEqual([true]);
   });
 
-  test('devices with a Home button get none, but still get the other tags', async ({ page }) => {
+  test('unsupported devices get none, but still get the other tags', async ({ page }) => {
     await serve(page, DEVICES.iPhoneSE, [{ manifest: APP }]);
     const out = await open(page);
     expect(byRel(out.tags, 'apple-touch-startup-image')).toEqual([]);
-    expect(out.result?.skipped['splash']).toMatch(/Home button/);
+    expect(out.result?.skipped['splash']).toMatch(/supported device/);
     expect(meta(out.tags, 'theme-color')).toBe('#2c3e50');
   });
 
@@ -107,14 +107,14 @@ test.describe('launch images', () => {
     expect(byRel(out.tags, 'apple-touch-startup-image')).toEqual([]);
   });
 
-  test("the page's own launch images are left alone (Firt)", async ({ page }) => {
+  test("the page's own launch images are left alone", async ({ page }) => {
     await serve(page, DEVICES.iPhone17Pro, [{ manifest: APP, head: '<link rel="apple-touch-startup-image" href="/mine.png">' }]);
     const out = await open(page);
     expect(byRel(out.tags, 'apple-touch-startup-image')).toEqual([]);
     expect(out.result?.skipped['splash']).toMatch(/already has launch images/);
   });
 
-  test('can be switched off or restyled from the manifest link (Firt)', async ({ page }) => {
+  test('can be switched off or restyled from the manifest link', async ({ page }) => {
     await serve(page, DEVICES.iPhone17Pro, [
       { path: '/off.html', manifest: APP, linkAttrs: 'data-pwacompat-splash="false"' },
       { path: '/red.html', manifest: APP, manifestPath: '/red.json', linkAttrs: 'data-pwacompat-splash-background="#ff0000" data-pwacompat-cache="false"' },
@@ -157,7 +157,7 @@ test.describe('icons', () => {
     ],
   };
 
-  test('favicons come from "any" icons and the touch icon from "maskable" (review C1, C6)', async ({ page }) => {
+  test('favicons come from "any" icons and the touch icon from "maskable"', async ({ page }) => {
     await serve(page, DEVICES.iPhone17Pro, [{ manifest: PURPOSES }], { 'mask-512.png': png(512, [255, 200, 0, 255]) });
     const out = await open(page);
     expect(byRel(out.tags, 'icon').map((t) => t['href'])).toEqual(['https://app.test/any-192.png']);
@@ -198,7 +198,7 @@ test.describe('icons', () => {
     expect(byRel(out.tags, 'icon')).toEqual([]);
   });
 
-  test('an icon without sizes no longer discards the manifest (review C3)', async ({ page }) => {
+  test('an icon without sizes is still used', async ({ page }) => {
     await serve(page, DEVICES.iPhone17Pro, [{ manifest: { theme_color: 'red', display: 'standalone', icons: [{ src: 'a.png' }] } }]);
     const out = await open(page);
     expect(meta(out.tags, 'theme-color')).toBe('red');
@@ -206,7 +206,7 @@ test.describe('icons', () => {
     expect(out.warnings).toEqual([]);
   });
 
-  test('manifest strings never become CSS selectors (review S3)', async ({ page }) => {
+  test('manifest strings never become CSS selectors', async ({ page }) => {
     const sizes = '1"],link[rel="manifest';
     await serve(page, DEVICES.iPhone17Pro, [{ manifest: { icons: [{ src: 'evil.png', sizes }, { src: 'ok.png', sizes: '64x64' }] } }]);
     const out = await open(page);
@@ -216,7 +216,7 @@ test.describe('icons', () => {
 });
 
 test.describe('status bar and Smart App Banner', () => {
-  test('light themes get dark status bar text (review C2)', async ({ page }) => {
+  test('light themes get dark status bar text', async ({ page }) => {
     await serve(page, DEVICES.iPhone17Pro, [{ manifest: { ...APP, theme_color: '#b0b0b0' } }]);
     const out = await open(page);
     expect(meta(out.tags, 'apple-mobile-web-app-status-bar-style')).toBe('default');
@@ -228,7 +228,7 @@ test.describe('status bar and Smart App Banner', () => {
     expect(meta(out.tags, 'apple-mobile-web-app-status-bar-style')).toBe('black-translucent');
   });
 
-  test('Smart App Banner needs prefer_related_applications and a clean id (review S4, C5)', async ({ page }) => {
+  test('Smart App Banner needs prefer_related_applications and a numeric id', async ({ page }) => {
     const related = [{ platform: 'itunes', url: 'https://apps.apple.com/us/app/paid4you/id1234567890' }];
     await serve(page, DEVICES.iPhone17Pro, [
       { path: '/yes.html', manifestPath: '/yes.json', manifest: { ...APP, related_applications: related, prefer_related_applications: true } },
@@ -244,7 +244,7 @@ test.describe('status bar and Smart App Banner', () => {
 });
 
 test.describe('failure handling', () => {
-  test('a page without a manifest gets a warning, not an uncaught exception (review C7)', async ({ page }) => {
+  test('a page without a manifest gets a warning, not an exception', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     await serve(page, DEVICES.iPhone17Pro, [{ manifest: null }]);
@@ -260,7 +260,7 @@ test.describe('failure handling', () => {
     expect(out.warnings.join()).toMatch(/HTTP 404/);
   });
 
-  test('a full sessionStorage no longer blocks the manifest or throws (review C4)', async ({ page }) => {
+  test('a full sessionStorage neither blocks the manifest nor throws', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     const fill = `<script>
@@ -276,7 +276,7 @@ test.describe('failure handling', () => {
 });
 
 test.describe('session cache', () => {
-  test('two apps on one origin keep their own manifests (review S2)', async ({ page }) => {
+  test('two apps on one origin keep their own manifests', async ({ page }) => {
     const served = await serve(page, DEVICES.iPhone17Pro, [
       { path: '/a/index.html', manifest: { ...APP, theme_color: '#ff0000' } },
       { path: '/b/index.html', manifest: { ...APP, theme_color: '#0000ff', display: 'browser' } },

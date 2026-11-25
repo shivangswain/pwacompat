@@ -1,44 +1,39 @@
-# PWACompat 3
+# PWACompat
 
 [![CI](https://github.com/shivangswain/pwacompat/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/shivangswain/pwacompat/actions/workflows/ci.yml)
 [![GitLab pipeline](https://gitlab.com/shivangswain/pwacompat/badges/master/pipeline.svg)](https://gitlab.com/shivangswain/pwacompat/-/pipelines)
 [![Latest release](https://img.shields.io/github/v/release/shivangswain/pwacompat?sort=semver)](https://github.com/shivangswain/pwacompat/releases/latest)
 
-PWACompat fills the gaps between your [Web App Manifest](https://developer.mozilla.org/docs/Web/Manifest) and Apple platforms. Safari reads most of the manifest itself today, but iOS and iPadOS still have no manifest field for launch images, and a few other details still need HTML tags.
-
-Version 3 is a TypeScript rewrite for current iOS, iPadOS and macOS. It adds only what those platforms can't take from the manifest, never replaces tags you wrote, and lets you switch every feature off. See the [changelog](CHANGELOG.md) for what changed from v2.
+PWACompat reads your [Web App Manifest](https://developer.mozilla.org/docs/Web/Manifest) and adds the tags iOS, iPadOS and macOS Safari need but don't take from it, chiefly launch images. It never replaces tags already in your page, and every feature can be switched off.
 
 ## What it adds
 
-| Platform | Adds |
+| Platform | Tags |
 | --- | --- |
-| iPhone and iPad without a Home button | A launch image (`apple-touch-startup-image`) drawn for this exact device |
-| iOS and iPadOS | `apple-touch-icon` from a `maskable` icon, `apple-mobile-web-app-status-bar-style`, a Smart App Banner when you prefer your App Store app |
-| iOS, iPadOS and macOS Safari | `<meta name="theme-color">` and `<link rel="icon">` favicons |
-| Any other browser, or an installed web app | Nothing: the manifest is read natively, and an installed app has already captured its metadata |
+| iPhone and iPad ([supported devices](#launch-images)) | `apple-touch-startup-image` drawn for the current device |
+| iOS and iPadOS | `apple-touch-icon` from a `maskable` icon, `apple-mobile-web-app-status-bar-style`, `apple-itunes-app` when `prefer_related_applications` is true |
+| iOS, iPadOS and macOS Safari | `theme-color`, `<link rel="icon">` favicons |
 
-Each tag is added only if the page doesn't already have one. Added elements carry a `data-pwacompat` attribute.
-
-PWACompat no longer adds `apple-mobile-web-app-capable` or `apple-mobile-web-app-title`, because iOS reads `display` and `name` from the manifest. It also dropped the UC Browser, QQ Browser, Internet Explorer and Windows tags that v2 added "just in case". Those were the main concerns in Maximiliano Firtman's [critique of v2](https://medium.com/@firt/you-shouldnt-use-chrome-s-pwacompat-library-in-your-progressive-web-apps-6b3496faab62).
+Other browsers and installed web apps are left untouched. Added elements carry a `data-pwacompat` attribute.
 
 ## Install
 
-### Drop-in script
+### Script
 
-Download `pwacompat.min.js` from the [latest release](https://github.com/shivangswain/pwacompat/releases/latest) and serve it from your own origin. The release notes include the `integrity` hash for that version:
+Download `pwacompat.min.js` from the [latest release](https://github.com/shivangswain/pwacompat/releases/latest), serve it from your origin, and pin it with the `integrity` hash from the release notes:
 
 ```html
 <link rel="manifest" href="/manifest.webmanifest">
 <script async src="/js/pwacompat.min.js"
-        integrity="sha384-…from the release notes…"
+        integrity="sha384-…"
         crossorigin="anonymous"></script>
 ```
 
-The script waits for the page's `load` event, so it never competes with your content. Don't hotlink an unversioned copy from a CDN: it runs with full access to your page.
+It runs after the page's `load` event.
 
 ### ES module
 
-The release's `pwacompat-<version>.tgz` is an npm package with type declarations:
+Each release includes an npm package with type declarations:
 
 ```sh
 npm install ./pwacompat-3.0.0.tgz
@@ -48,14 +43,13 @@ npm install ./pwacompat-3.0.0.tgz
 import { pwacompat } from 'pwacompat';
 
 const result = await pwacompat({ touchIcon: 'any' });
-console.log(result?.added, result?.skipped);
 ```
 
-The module doesn't run on import; call `pwacompat()` when you're ready, for example after your fonts load. It resolves to `null` on platforms where it does nothing.
+The module runs only when `pwacompat()` is called. It resolves to `null` where there is nothing to do.
 
 ## Options
 
-Set options as attributes on the manifest link, or pass them to `pwacompat()`. Options in code win over attributes.
+Set options as `data-pwacompat-*` attributes on the manifest link, or pass them to `pwacompat()`. Options in code take precedence.
 
 ```html
 <link rel="manifest" href="/manifest.webmanifest"
@@ -68,29 +62,23 @@ Set options as attributes on the manifest link, or pass them to `pwacompat()`. O
 | `data-pwacompat-splash` | `splash` | `true` | Generate a launch image |
 | `data-pwacompat-splash-title` | `splashTitle` | `true` | Draw the app name on it |
 | `data-pwacompat-splash-icon-size` | `splashIconSize` | `128` | Icon size in CSS pixels (48–512) |
-| `data-pwacompat-splash-font` | `splashFont` | system font, 24px semibold | Canvas `font` for the title. The v2 CSS variable `--pwacompat-splash-font` on the manifest link still works. |
+| `data-pwacompat-splash-font` | `splashFont` | system font, 24px semibold | Canvas `font` for the title; also read from the `--pwacompat-splash-font` CSS variable on the manifest link |
 | `data-pwacompat-splash-background` | `splashBackground` | `background_color`, then white | Launch image background |
 | `data-pwacompat-splash-color` | `splashColor` | black or white, whichever contrasts more | Title colour |
-| `data-pwacompat-touch-icon` | `touchIcon` | `maskable` | `maskable`: only full-bleed maskable icons. `any`: also `any` icons, with transparent pixels filled with `background_color`. `false`: never. |
+| `data-pwacompat-touch-icon` | `touchIcon` | `maskable` | `maskable`: maskable icons only. `any`: also `any` icons, with transparent pixels filled with `background_color`. `false`: none. |
 | `data-pwacompat-status-bar` | `statusBar` | `true` | Add `apple-mobile-web-app-status-bar-style` |
 | `data-pwacompat-theme-color` | `themeColor` | `true` | Add `theme-color` |
 | `data-pwacompat-favicons` | `favicons` | `true` | Add favicons when the page has none |
-| `data-pwacompat-smart-app-banner` | `smartAppBanner` | `true` | Add `apple-itunes-app` when `prefer_related_applications` is true |
+| `data-pwacompat-smart-app-banner` | `smartAppBanner` | `true` | Add `apple-itunes-app` |
 | `data-pwacompat-cache` | `cache` | `true` | Cache the manifest and images in `sessionStorage` |
 
-Boolean attributes accept `true`/`false`, `on`/`off`, `yes`/`no` or `1`/`0`.
+Boolean attributes accept `true`/`false`, `on`/`off`, `yes`/`no` and `1`/`0`.
 
-### Your own launch images and icons win
-
-Add your own `apple-touch-startup-image` or `apple-touch-icon` links and PWACompat leaves them alone. Designed launch images look better than generated ones; generated images are a fallback.
-
-### Status bar
-
-`apple-mobile-web-app-status-bar-style` is `black-translucent` when your viewport meta has `viewport-fit=cover`. Otherwise it's `black` for dark themes and `default` for light ones.
+The status bar style is `black-translucent` when the viewport meta has `viewport-fit=cover`, otherwise `black` for dark themes and `default` for light ones.
 
 ## Launch images
 
-iOS shows a launch image only if its size and media query match the device exactly. PWACompat draws one for the current device in idle time and caches it for the session. It covers these iPhones and iPads, which have no Home button and run iOS 27 or iPadOS 27:
+iOS shows a launch image only when its size and media query match the device exactly. PWACompat draws one for the current device during idle time and caches it for the session. Supported devices are the all-screen iPhones and iPads on iOS 27 and iPadOS 27:
 
 | Screen (CSS px) | Scale | Devices |
 | --- | --- | --- |
@@ -112,18 +100,15 @@ iOS shows a launch image only if its size and media query match the device exact
 | 756 × 1158 | 2× | iPad mini (A20 Pro) |
 | 744 × 1133 | 2× | iPad mini (6th gen, A17 Pro) |
 
-Devices with a Home button (iPhone SE, iPads with Touch ID in the Home button) get no launch image but still get the other tags.
+- iPhones get a portrait image; iPads get portrait and landscape. A manifest `orientation` of `portrait*` or `landscape*` limits it to that one.
+- No image is drawn when `display` is `browser` or the page already has `apple-touch-startup-image` links.
+- macOS has no web app launch images.
 
-- iPhone Home Screens don't rotate, so iPhones get a portrait image only, unless the manifest's `orientation` is landscape.
-- iPads get portrait and landscape, unless `orientation` locks one.
-- No launch image is made when `display` is `browser`.
-- macOS shows no launch image for web apps, so none is made there.
+The table is exported as `APPLE_DEVICES`.
 
-The table is exported as `APPLE_DEVICES` from the ES module.
+## Result event
 
-## Events
-
-When it finishes, PWACompat dispatches a `pwacompat` event on the manifest link. Its `detail` matches the value `pwacompat()` resolves to:
+PWACompat dispatches a `pwacompat` event on the manifest link when it finishes. `detail` is the same object `pwacompat()` resolves to:
 
 ```js
 document.querySelector('link[rel="manifest"]').addEventListener('pwacompat', (e) => {
@@ -133,33 +118,33 @@ document.querySelector('link[rel="manifest"]').addEventListener('pwacompat', (e)
 
 ## Browser support
 
-The script targets Safari 16.4 and later, the first release where every iOS browser can add a site to the Home Screen. Adding a site to the Dock on macOS needs Safari 17 or later.
+Safari 16.4 and later on iOS and iPadOS. Adding a web app to the Dock on macOS needs Safari 17 or later.
 
 ## Development
 
 ```sh
 npm ci --ignore-scripts
 npm run typecheck
-npm run test:unit       # Node's test runner, no browser
+npm run test:unit       # Node test runner
 npm run build           # dist/: pwacompat.min.js, pwacompat.mjs, types
 npx playwright install chromium webkit
 npm run test:browser    # Playwright, emulating iPhone, iPad and Mac
 ```
 
-Set `PW_CHANNEL=msedge` or `PW_CHANNEL=chrome` to run the Chromium tests in an installed browser instead of downloading one. The browser tests load the built files, so run `npm run build` first. `demo/` is a manual test page that loads `../dist/pwacompat.min.js`.
+`PW_CHANNEL=msedge` or `PW_CHANNEL=chrome` runs the Chromium tests in an installed browser. `demo/` loads `../dist/pwacompat.min.js` for manual testing.
 
 ## Releasing
 
-1. Update `version` in `package.json` and add a matching `## [x.y.z]` section to `CHANGELOG.md`.
-2. Commit, then tag and push: `git tag -s vX.Y.Z && git push origin vX.Y.Z`.
+1. Set `version` in `package.json` and add a matching `## [x.y.z]` section to `CHANGELOG.md`.
+2. Tag and push: `git tag -s vX.Y.Z && git push origin vX.Y.Z`.
 
-Both pipelines then run the tests and publish the same assets: `pwacompat.min.js` and its source map, `pwacompat.mjs`, the npm tarball, `SHA256SUMS` and `sri.json`. The release notes come from the changelog and include the SRI snippet.
+Both pipelines test, build, and publish `pwacompat.min.js` with its source map, `pwacompat.mjs`, the npm package, `SHA256SUMS` and `sri.json`. Release notes come from the changelog.
 
-- **GitHub Actions** (`.github/workflows/release.yml`) creates a GitHub Release and attaches a signed build-provenance attestation. Verify it with `gh attestation verify pwacompat.min.js --repo shivangswain/pwacompat`.
-- **GitLab CI/CD** (`.gitlab-ci.yml`) uploads the files to the project's Generic Package Registry and creates a GitLab Release that links them.
+- **GitHub Actions** creates a GitHub Release with a signed build-provenance attestation (`gh attestation verify pwacompat.min.js --repo shivangswain/pwacompat`).
+- **GitLab CI/CD** uploads the files to the Generic Package Registry and creates a GitLab Release linking them.
 
-The build is deterministic, and both pipelines build twice and compare the output.
+Builds are deterministic; both pipelines build twice and compare.
 
 ## License
 
-Apache 2.0. Originally written by the Chrome team at Google; version 3 is a rewrite. See [LICENSE](LICENSE).
+Apache 2.0, based on PWACompat by the Chrome team at Google. See [LICENSE](LICENSE).
