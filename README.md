@@ -1,5 +1,9 @@
 # PWACompat 3
 
+[![CI](https://github.com/shivangswain/pwacompat/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/shivangswain/pwacompat/actions/workflows/ci.yml)
+[![GitLab pipeline](https://gitlab.com/shivangswain/pwacompat/badges/master/pipeline.svg)](https://gitlab.com/shivangswain/pwacompat/-/pipelines)
+[![Latest release](https://img.shields.io/github/v/release/shivangswain/pwacompat?sort=semver)](https://github.com/shivangswain/pwacompat/releases/latest)
+
 PWACompat fills the gaps between your [Web App Manifest](https://developer.mozilla.org/docs/Web/Manifest) and Apple platforms. Safari reads most of the manifest itself today, but iOS and iPadOS still have no manifest field for launch images, and a few other details still need HTML tags.
 
 Version 3 is a TypeScript rewrite for current iOS, iPadOS and macOS. It adds only what those platforms can't take from the manifest, never replaces tags you wrote, and lets you switch every feature off. See the [changelog](CHANGELOG.md) for what changed from v2.
