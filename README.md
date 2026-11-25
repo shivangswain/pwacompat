@@ -145,7 +145,7 @@ Both pipelines test, build, and publish `pwacompat.min.js` with its source map, 
 - **GitHub Actions** creates a GitHub Release with a signed build-provenance attestation (`gh attestation verify pwacompat.min.js --repo shivangswain/pwacompat`).
 - **GitLab CI/CD** uploads the files to the Generic Package Registry and creates a GitLab Release linking them.
 
-Builds are reproducible. `dist/` is byte-identical on Linux, macOS and Windows; CI checks all three. The npm tarball depends on the npm version, so release builds use the exact Node version in `.nvmrc`, and a release is published only if it matches the tested build. Each release's notes give the commit and Node version needed to reproduce it.
+Builds are reproducible. `dist/` is byte-identical on Linux and Windows; CI checks both. The npm tarball depends on the npm version, so release builds use the exact Node version in `.nvmrc`, and a release is published only if it matches the tested build. Each release's notes give the commit and Node version needed to reproduce it.
 
 ## License
 
