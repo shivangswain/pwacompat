@@ -1,2 +1,8 @@
 .DS_Store
-node_modules
+node_modules/
+dist/
+release/
+test-results/
+playwright-report/
+dist.sha256
+*.tgz

@@ -1,0 +1,124 @@
+# GitLab CI/CD: tests on every push and merge request. Pushing a tag like
+# v3.0.0 also uploads the release assets to the Generic Package Registry and
+# creates a GitLab Release linking them; the same files as the GitHub Release.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+stages:
+  - test
+  - build
+  - release
+
+variables:
+  npm_config_cache: $CI_PROJECT_DIR/.npm
+  PACKAGE_REGISTRY_URL: $CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/pwacompat/$CI_COMMIT_TAG
+
+default:
+  image: node:24.22.3-trixie-slim
+  interruptible: true
+
+.npm:
+  cache:
+    key:
+      files: [package-lock.json]
+    paths: [.npm/]
+  before_script:
+    - npm ci --ignore-scripts
+
+.on-release-tag:
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/
+
+check:
+  extends: .npm
+  stage: test
+  script:
+    - npm run typecheck
+    - npm run test:unit
+    - npm run build
+    - (cd dist && find . -type f | sort | xargs sha256sum) > dist.sha256
+    - npm run build
+    - (cd dist && sha256sum --check --strict ../dist.sha256)
+
+browser:
+  extends: .npm
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.65.1-noble
+  parallel:
+    matrix:
+      - BROWSER: [chromium, webkit]
+  script:
+    - npm run build
+    - npx playwright test --project=$BROWSER
+  artifacts:
+    when: on_failure
+    paths: [test-results/]
+    expire_in: 1 week
+
+build:
+  extends: .npm
+  stage: build
+  script:
+    - npm run build
+    - npm run release:assets
+  artifacts:
+    paths: [release/]
+    reports:
+      dotenv: release/release.env
+    expire_in: 30 days
+
+upload:
+  extends: .on-release-tag
+  stage: release
+  image: curlimages/curl:8.23.0
+  needs: [build]
+  script:
+    - |
+      for file in release/assets/*; do
+        curl --fail-with-body --silent --show-error \
+          --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+          --upload-file "$file" \
+          "$PACKAGE_REGISTRY_URL/$(basename "$file")"
+        echo "uploaded $(basename "$file")"
+      done
+
+release:
+  extends: .on-release-tag
+  stage: release
+  image: registry.gitlab.com/gitlab-org/cli:v1.133.0
+  needs:
+    - job: build
+      artifacts: true
+    - job: upload
+  script:
+    - echo "Creating release $CI_COMMIT_TAG for pwacompat $VERSION"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: pwacompat $CI_COMMIT_TAG
+    description: ./release/notes.md
+    assets:
+      links:
+        - name: pwacompat.min.js
+          url: $PACKAGE_REGISTRY_URL/pwacompat.min.js
+          link_type: package
+        - name: pwacompat.min.js.map
+          url: $PACKAGE_REGISTRY_URL/pwacompat.min.js.map
+          link_type: package
+        - name: pwacompat.mjs
+          url: $PACKAGE_REGISTRY_URL/pwacompat.mjs
+          link_type: package
+        - name: pwacompat-$VERSION.tgz
+          url: $PACKAGE_REGISTRY_URL/pwacompat-$VERSION.tgz
+          link_type: package
+        - name: SHA256SUMS
+          url: $PACKAGE_REGISTRY_URL/SHA256SUMS
+          link_type: other
+        - name: sri.json
+          url: $PACKAGE_REGISTRY_URL/sri.json
+          link_type: other

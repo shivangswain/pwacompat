@@ -1,5 +1,7 @@
 Want to contribute? Great! First, read this page (including the small print at the end).
 
+For setting up, testing and releasing, see [Development](README.md#development) and [Releasing](README.md#releasing) in the README. Every change needs passing unit and browser tests (`npm test`).
+
 ### Before you contribute
 Before we can use your code, you must sign the
 [Google Individual Contributor License Agreement](https://developers.google.com/open-source/cla/individual?csw=1)
