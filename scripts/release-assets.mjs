@@ -17,6 +17,20 @@ if (tag && tag !== `v${version}`) {
   process.exit(1);
 }
 
+// npm pack's bytes depend on the npm (and so Node) version, so releases use the
+// exact version in .nvmrc. CI fails on any other; local builds only warn.
+const node = readFileSync('.nvmrc', 'utf8').trim();
+if (process.versions.node !== node) {
+  const message = `Node ${process.versions.node} is not the pinned ${node} (.nvmrc); the npm tarball will not match a release build.`;
+  if (process.env.CI) {
+    console.error(message);
+    process.exit(1);
+  }
+  console.warn(`warning: ${message}`);
+}
+const commit = process.env.GITHUB_SHA || process.env.CI_COMMIT_SHA ||
+  execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+
 const BUILT = ['pwacompat.min.js', 'pwacompat.min.js.map', 'pwacompat.mjs'];
 for (const file of BUILT) {
   if (!existsSync(`dist/${file}`)) {
@@ -79,6 +93,16 @@ ${sums.trim()}
 \`\`\`
 
 Verify a download with \`sha256sum -c SHA256SUMS\`.
+
+### Reproduce
+
+Built from commit \`${commit}\` with Node ${node}. With that Node version:
+
+\`\`\`sh
+git checkout v${version}
+npm ci --ignore-scripts && npm run build && npm run release:assets
+sha256sum -c release/assets/SHA256SUMS
+\`\`\`
 `;
 writeFileSync('release/notes.md', notes);
 writeFileSync('release/release.env', `VERSION=${version}\n`);

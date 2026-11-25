@@ -36,6 +36,12 @@ jobs:
       - run: npm run release:assets
         env:
           RELEASE_TAG: ${{ github.ref_name }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pwacompat-release-preview
+          path: tested
+      - name: Check the release matches the tested build
+        run: diff tested/assets/SHA256SUMS release/assets/SHA256SUMS
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: release/assets/*

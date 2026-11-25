@@ -20,6 +20,7 @@ variables:
   PACKAGE_REGISTRY_URL: $CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/pwacompat/$CI_COMMIT_TAG
 
 default:
+  # Keep in step with .nvmrc: release assets are byte-identical only on that Node version.
   image: node:24.22.3-trixie-slim
   interruptible: true
 
@@ -41,10 +42,14 @@ check:
   script:
     - npm run typecheck
     - npm run test:unit
+    - test "$(node -p process.versions.node)" = "$(cat .nvmrc)"
     - npm run build
-    - (cd dist && find . -type f | sort | xargs sha256sum) > dist.sha256
+    - node scripts/dist-hashes.mjs > dist.sha256
     - npm run build
-    - (cd dist && sha256sum --check --strict ../dist.sha256)
+    - node scripts/dist-hashes.mjs --check dist.sha256
+  artifacts:
+    paths: [dist.sha256]
+    expire_in: 30 days
 
 browser:
   extends: .npm
@@ -64,8 +69,10 @@ browser:
 build:
   extends: .npm
   stage: build
+  needs: [check, browser]
   script:
     - npm run build
+    - node scripts/dist-hashes.mjs --check dist.sha256
     - npm run release:assets
   artifacts:
     paths: [release/]
