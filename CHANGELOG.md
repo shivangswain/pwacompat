@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.0.0] - 2026-11-25
+## [3.0.0] - 2026-11-26
 
 A TypeScript rewrite focused on current Apple platforms. Breaking: older browsers are no longer supported and several legacy tags are no longer added.
 
